@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Par-Wordle</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <header>
+        <h1>Par-Wordle</h1>
+    </header>
+    <main id="wordle">
+        <div id="controls">
+            
+        </div>
+        <div id="board">
+            <div id="board_row_1" class="board row">
+                <div id="board_row_1_letter_1" class="board letter"></div>
+                <div id="board_row_1_letter_2" class="board letter"></div>
+                <div id="board_row_1_letter_3" class="board letter"></div>
+                <div id="board_row_1_letter_4" class="board letter"></div>
+                <div id="board_row_1_letter_5" class="board letter"></div>
+            </div>
+            <div id="board_row_2" class="board row">
+                <div id="board_row_2_letter_1" class="board letter"></div>
+                <div id="board_row_2_letter_2" class="board letter"></div>
+                <div id="board_row_2_letter_3" class="board letter"></div>
+                <div id="board_row_2_letter_4" class="board letter"></div>
+                <div id="board_row_2_letter_5" class="board letter"></div>
+            </div>
+            <div id="board_row_3" class="board row">
+                <div id="board_row_3_letter_1" class="board letter"></div>
+                <div id="board_row_3_letter_2" class="board letter"></div>
+                <div id="board_row_3_letter_3" class="board letter"></div>
+                <div id="board_row_3_letter_4" class="board letter"></div>
+                <div id="board_row_3_letter_5" class="board letter"></div>
+            </div>
+            <div id="board_row_4" class="board row">
+                <div id="board_row_4_letter_1" class="board letter"></div>
+                <div id="board_row_4_letter_2" class="board letter"></div>
+                <div id="board_row_4_letter_3" class="board letter"></div>
+                <div id="board_row_4_letter_4" class="board letter"></div>
+                <div id="board_row_4_letter_5" class="board letter"></div>
+            </div>
+            <div id="board_row_5" class="board row">
+                <div id="board_row_5_letter_1" class="board letter"></div>
+                <div id="board_row_5_letter_2" class="board letter"></div>
+                <div id="board_row_5_letter_3" class="board letter"></div>
+                <div id="board_row_5_letter_4" class="board letter"></div>
+                <div id="board_row_5_letter_5" class="board letter"></div>
+            </div>
+            <div id="board_row_6" class="board row">
+                <div id="board_row_6_letter_1" class="board letter"></div>
+                <div id="board_row_6_letter_2" class="board letter"></div>
+                <div id="board_row_6_letter_3" class="board letter"></div>
+                <div id="board_row_6_letter_4" class="board letter"></div>
+                <div id="board_row_6_letter_5" class="board letter"></div>
+            </div>
+        </div>
+        <div id="result"></div>
+        <div id="keyboard">
+            <div id="keyboard_row_1" class="keyboard row">
+                <div id="keyboard_letter_q" class="keyboard letter">Q</div>
+                <div id="keyboard_letter_w" class="keyboard letter">W</div>
+                <div id="keyboard_letter_e" class="keyboard letter">E</div>
+                <div id="keyboard_letter_r" class="keyboard letter">R</div>
+                <div id="keyboard_letter_t" class="keyboard letter">T</div>
+                <div id="keyboard_letter_y" class="keyboard letter">Y</div>
+                <div id="keyboard_letter_u" class="keyboard letter">U</div>
+                <div id="keyboard_letter_i" class="keyboard letter">I</div>
+                <div id="keyboard_letter_o" class="keyboard letter">O</div>
+                <div id="keyboard_letter_p" class="keyboard letter">P</div>
+            </div>
+            <div id="keyboard_row_2" class="keyboard row">
+                <div id="keyboard_letter_a" class="keyboard letter">A</div>
+                <div id="keyboard_letter_s" class="keyboard letter">S</div>
+                <div id="keyboard_letter_d" class="keyboard letter">D</div>
+                <div id="keyboard_letter_f" class="keyboard letter">F</div>
+                <div id="keyboard_letter_g" class="keyboard letter">G</div>
+                <div id="keyboard_letter_h" class="keyboard letter">H</div>
+                <div id="keyboard_letter_j" class="keyboard letter">J</div>
+                <div id="keyboard_letter_k" class="keyboard letter">K</div>
+                <div id="keyboard_letter_l" class="keyboard letter">L</div>
+            </div>
+            <div id="keyboard_row_3" class="keyboard row">
+                <div id="keyboard_letter_z" class="keyboard letter">Z</div>
+                <div id="keyboard_letter_x" class="keyboard letter">X</div>
+                <div id="keyboard_letter_c" class="keyboard letter">C</div>
+                <div id="keyboard_letter_v" class="keyboard letter">V</div>
+                <div id="keyboard_letter_b" class="keyboard letter">B</div>
+                <div id="keyboard_letter_n" class="keyboard letter">N</div>
+                <div id="keyboard_letter_m" class="keyboard letter">M</div>
+            </div>
+        </div>
+    </main>
+    <section id="help">
+        <h2>What is Par-Wordle?</h2>
+        <p>
+            Par-Wordle is an extension to the Wordle game that displays a score
+            showing how many possible words are left at the end of the round,
+            given all the previous guesses.
+        </p>
+        <h2>Why?</h2>
+        <p>
+            One idealized way of playing Wordle is by eliminating all other
+            possibilities first before deducing the answer, thus achieving the
+            "par-0" score.
+        </p>
+        <p>
+            In a sense, this score is a measure of how lucky we are when we
+            reach the answer, and we may want to minimize this number.
+        </p>
+        <h2>Transparent Mode</h2>
+        <p>
+            In transparent mode, the number of possible words remaining will be
+            shown next to each guess.
+        </p>
+        <h2>Free Mode</h2>
+        <p>
+            In free mode, any sequence of 5 letters is a valid guess.
+        </p>
+    </section>
+    <script src="js/wordle.js"></script>
+</body>
+</html>
