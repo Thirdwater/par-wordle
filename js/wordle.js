@@ -32,11 +32,13 @@
 
             // Aggregate hints from all guesses so far
             this.blacks = [];
-            this.yellows = new Map();
+            this.yellows = [];
+            this.yellowsMap = new Map();
             for (var i = 0; i < 5; i++) {
-                this.yellows.set(i, []);
+                this.yellowsMap.set(i, []);
             }
-            this.greens = Array(5).fill("");
+            this.greens = [];
+            this.greensMap = Array(5).fill("");
             this.maxGreenYellowCounts = new Map();
         }
 
@@ -62,8 +64,11 @@
                 if (guessLetter === answerLetter) {
                     setToOneOrIncrement(consumedLetterCounts, guessLetter);
                     guessResult[i] = Fill.GREEN;
-                    if (this.greens[i] !== guessLetter) {
-                        this.greens[i] = guessLetter;
+                    if (this.greensMap[i] !== guessLetter) {
+                        this.greensMap[i] = guessLetter;
+                    }
+                    if (!this.greens.includes(guessLetter)) {
+                        this.greens.push(guessLetter);
                     }
                 }
             }
@@ -78,8 +83,11 @@
                     if (hasLetter && hasRemainingCount) {
                         setToOneOrIncrement(consumedLetterCounts, guessLetter);
                         guessResult[i] = Fill.YELLOW;
-                        if (!this.yellows.get(i).includes(guessLetter)) {
-                            this.yellows.get(i).push(guessLetter);
+                        if (!this.yellowsMap.get(i).includes(guessLetter)) {
+                            this.yellowsMap.get(i).push(guessLetter);
+                        }
+                        if (!this.yellows.includes(guessLetter)) {
+                            this.yellows.push(guessLetter);
                         }
                     } else {
                         if (!this.blacks.includes(guessLetter)) {
@@ -135,8 +143,8 @@
 
             var greensYellowsPattern = "";
             for (var i = 0; i < 5; i++) {
-                var greenLetter = this.greens[i];
-                var yellowLetters = this.yellows.get(i);
+                var greenLetter = this.greensMap[i];
+                var yellowLetters = this.yellowsMap.get(i);
                 if (greenLetter) {
                     greensYellowsPattern += greenLetter;
                 } else if (yellowLetters.length > 0) {
@@ -164,9 +172,9 @@
             var initialFilterRegExp = new RegExp(initialFilterPattern);
 
             console.log("\t\t1. Initial filter:");
-            console.log("\t\t\tGreens:\t\t" + `[${this.greens}]`);
+            console.log("\t\t\tGreens:\t\t" + `[${this.greensMap}]`);
             // console.log("\t\t\t  Counts:\t" + `${[...this.greenCounts.entries()]}`);
-            console.log("\t\t\tYellows:\t" + `${[...this.yellows.entries()]}`);
+            console.log("\t\t\tYellows:\t" + `${[...this.yellowsMap.entries()]}`);
             // console.log("\t\t\t  Counts:\t" + `${[...this.yellowCounts.entries()]}`);
             console.log("\t\t\tBlacks:\t\t" + `${this.blacks}`);
             console.log("\t\t\t  Filtered:\t" + `${filteredBlacks}`);
@@ -200,6 +208,7 @@
 
         newGame() {
             this.clearBoard();
+            this.clearKeyboard();
             this.game = new WordleGame("penne");
             this.currentColumn = 1;
             this.filledRow = false;
@@ -251,11 +260,29 @@
             }
             this.currentColumn = 1;
             this.filledRow = false;
-            setTimeout(this.handleUpdateState, 100);  // Allow some time for css to update
+            this.highlightKeyboard();
+            setTimeout(this.checkGameState, 100);  // Allow some time for css to update
         }
 
-        handleUpdateState = () => {
-            console.log("handleUpdateState");
+        highlightKeyboard() {
+            this.game.blacks.forEach((letter) => {
+                var letter = this.getKeyboardLetter(letter);
+                letter.classList.remove('yellow', 'green');
+                letter.classList.add('filled', 'black');
+            });
+            this.game.yellows.forEach((letter) => {
+                var letter = this.getKeyboardLetter(letter);
+                letter.classList.remove('black', 'green');
+                letter.classList.add('filled', 'yellow');
+            });
+            this.game.greens.forEach((letter) => {
+                var letter = this.getKeyboardLetter(letter);
+                letter.classList.remove('black', 'yellow');
+                letter.classList.add('filled', 'green');
+            });
+        }
+
+        checkGameState = () => {
             if (this.game.state === State.WON) {
                 alert(`Congratulations! You won!`);
                 this.newGame();
@@ -297,14 +324,33 @@
                 for (var col = 1; col <= 5; col++) {
                     var cell = this.getCell(row, col);
                     cell.innerText = "";
-                    cell.classList.remove('filled', 'grey', 'yellow', 'green');
+                    this.removeFill(cell);
                 }
+            }
+        }
+
+        clearKeyboard() {
+            var charCodeA = 97;
+            var charCodeZ = charCodeA + 26 - 1;
+            for (var charCode = charCodeA; charCode <= charCodeZ; charCode++) {
+                var letter = String.fromCharCode(charCode);
+                var element = this.getKeyboardLetter(letter);
+                this.removeFill(element);
             }
         }
 
         getCell(row, column) {
             var cellID = `board_row_${row}_letter_${column}`;
             return document.getElementById(cellID);
+        }
+
+        getKeyboardLetter(letter) {
+            var letterID = `keyboard_letter_${letter.toLowerCase()}`;
+            return document.getElementById(letterID);
+        }
+
+        removeFill(element) {
+            element.classList.remove('filled', 'grey', 'yellow', 'green');
         }
 
     }
