@@ -15324,7 +15324,7 @@
             this.results = [];
             this.answerLetterCounts = this.countLetters(answer);
 
-            // Aggregate hints from all guesses so far
+            // Aggregate hints from all guesses so far for regex
             this.blacks = [];
             this.yellows = [];
             this.yellowsMap = new Map();
@@ -15333,7 +15333,10 @@
             }
             this.greens = [];
             this.greensMap = Array(5).fill("");
-            this.maxGreenYellowCounts = new Map();
+            this.greenYellowCounts = new Map();
+            this.greenYellowCountIsMax = new Map();
+
+            this.filteredAnswers = allowedAnswers;
         }
 
         isValidGuess(guess) {
@@ -15347,7 +15350,6 @@
             if (this.state !== State.ON_GOING) {
                 return;
             }
-            console.log("\tGuessing:\t" + guess);
             this.guesses.push(guess);
             this.currentRow++;
 
@@ -15395,18 +15397,29 @@
             }
             this.results.push(guessResult);
 
-            // Update max letter count
+            // Update letter count
             var tmpCount = new Map();
             for (var i = 0; i < 5; i++) {
-
+                var guessLetter = guess.charAt(i);
+                if (guessResult[i] === Fill.YELLOW || guessResult[i] === Fill.GREEN) {
+                    setToOneOrIncrement(tmpCount, guessLetter);
+                    var newCount = tmpCount.get(guessLetter);
+                    if (!this.greenYellowCounts.has(guessLetter) ||
+                        newCount > this.greenYellowCounts.get(guessLetter)) {
+                        this.greenYellowCounts.set(guessLetter, newCount);
+                        this.greenYellowCountIsMax.set(guessLetter, false);
+                    }
+                }
             }
+            // Find those that are also upperbounds
+            tmpCount.forEach((count, letter) => {
+                // Note that even in other guesses, repeated letters must start
+                // filling from greens/yellows first.
+                if (this.blacks.includes(letter)) {
+                    this.greenYellowCountIsMax.set(letter, true);
+                }
+            });
 
-            // console.log(...consumedLetterCounts.entries());
-            console.log("\tResult:\t\t" + guessResult.map((letterResult) => letterResult.description).join(""));
-
-            this.getPossibleAnswers();
-
-            this.updateState();
             return guessResult;
         }
 
@@ -15435,8 +15448,11 @@
             this.state = State.ON_GOING;
         }
 
-        getPossibleAnswers() {
-            console.log("\tRegex:");
+        filterPossibleAnswers() {
+            if (this.state === State.WON) {
+                this.filteredAnswers = this.filteredAnswers.filter(answer => answer !== this.answer);
+                return;
+            }
 
             var greensYellowsPattern = "";
             for (var i = 0; i < 5; i++) {
@@ -15453,12 +15469,12 @@
 
             // For each black letters that doesn't appear in green or yellow, we can safely exclude.
             var filteredBlacks = []
-            this.blacks.forEach((blackLetter) => {
-                // var inGreens = this.greenCounts.has(blackLetter);
-                // var inYellows = this.yellowCounts.has(blackLetter);
-                // if (!inGreens && !inYellows) {
-                //     filteredBlacks.push(blackLetter);
-                // }
+            this.blacks.forEach((letter) => {
+                var inGreens = this.greens.includes(letter);
+                var inYellows = this.yellows.includes(letter);
+                if (!inGreens && !inYellows) {
+                    filteredBlacks.push(letter);
+                }
             });
 
             var initialFilterPattern = "^";
@@ -15466,21 +15482,25 @@
                 initialFilterPattern += `(?!.*[${filteredBlacks.join("")}])`;
             }
             initialFilterPattern += `${greensYellowsPattern}$`;
-            var initialFilterRegExp = new RegExp(initialFilterPattern);
-
-            console.log("\t\t1. Initial filter:");
-            console.log("\t\t\tGreens:\t\t" + `[${this.greensMap}]`);
-            // console.log("\t\t\t  Counts:\t" + `${[...this.greenCounts.entries()]}`);
-            console.log("\t\t\tYellows:\t" + `${[...this.yellowsMap.entries()]}`);
-            // console.log("\t\t\t  Counts:\t" + `${[...this.yellowCounts.entries()]}`);
-            console.log("\t\t\tBlacks:\t\t" + `${this.blacks}`);
-            console.log("\t\t\t  Filtered:\t" + `${filteredBlacks}`);
-            console.log("\t\t\tPattern:\t" + initialFilterPattern);
+            var initialFilterRegExp = new RegExp(initialFilterPattern, 'gmi');
 
             // For each letter's green and yellow counts, we have at least the sum of them.
             // If that same letter also appears in black, then we also have at most that sum.
+            var countFilterRegExps = [];
+            this.greenYellowCounts.forEach((count, letter) => {
+                var letterCountFilter = `^[^\n${letter}]*(?:${letter}[^\n${letter}]*)`;
+                if (this.greenYellowCountIsMax.get(letter)) {
+                    letterCountFilter += `{${count}}$`;
+                } else {
+                    letterCountFilter += `{${count},}$`;
+                }
+                countFilterRegExps.push(new RegExp(letterCountFilter, 'gmi'));
+            });
 
-            var countFilterRegExp = new RegExp();
+            this.filteredAnswers = this.filteredAnswers.filter(answer => answer.match(initialFilterRegExp));
+            countFilterRegExps.forEach((regexp) => {
+                this.filteredAnswers = this.filteredAnswers.filter(answer => answer.match(regexp));
+            });
         }
 
         countLetters(word) {
@@ -15506,7 +15526,8 @@
         newGame() {
             this.clearBoard();
             this.clearKeyboard();
-            this.game = new WordleGame("penne");
+            this.clearResults();
+            this.game = new WordleGame(allowedAnswers[Math.floor(Math.random() * allowedAnswers.length)]);
             this.currentColumn = 1;
             this.filledRow = false;
         }
@@ -15521,7 +15542,11 @@
             } else if (keyIsLetter) {
                 this.addLetter(key);
             } else if (key === 'enter') {
-                this.addGuess();
+                if (this.game.state === State.ON_GOING) {
+                    this.addGuess();
+                } else {
+                    this.newGame();
+                }
             }
         }
 
@@ -15536,7 +15561,7 @@
                 guess += cell.innerText.toLowerCase();
             }
             if (!this.game.isValidGuess(guess)) {
-                var message = `Not a valid guess!`;
+                var message = `Not a valid word!`;
                 this.setInfo(this.game.currentRow, message);
                 return;
             }
@@ -15559,7 +15584,12 @@
             }
             this.currentColumn = 1;
             this.filledRow = false;
+
+            this.game.updateState();
+            this.game.filterPossibleAnswers();
+            this.setInfo(guessRow, this.game.filteredAnswers.length);
             this.highlightKeyboard();
+            this.checkGameState();
             setTimeout(this.checkGameState, 100);  // Allow some time for css to update
         }
 
@@ -15582,13 +15612,19 @@
         }
 
         checkGameState = () => {
-            if (this.game.state === State.WON) {
-                alert(`Congratulations! You won!`);
-                this.newGame();
-            } else if (this.game.state === State.LOST) {
-                alert(`You lost! The answer was "${this.game.answer.toUpperCase()}"!`);
-                this.newGame();
+            if (this.game.state === State.ON_GOING) {
+                return;
             }
+            var message = ""
+            if (this.game.state === State.WON) {
+                message = "Congratulations! You won!";
+            } else {
+                message = `You lost! The answer was "${this.game.answer.toUpperCase()}"!`;
+            }
+            this.setResultMessage(message);
+            this.setResultScore();
+            this.setResultRemainingPossibilities();
+            this.showResults();
         }
 
         testAddGuess(guess) {
@@ -15600,7 +15636,7 @@
         }
 
         addLetter(letter) {
-            if (this.filledRow) {
+            if (this.filledRow || this.game.state !== State.ON_GOING) {
                 return;
             }
             var cell = this.getCell(this.game.currentRow, this.currentColumn);
@@ -15634,6 +15670,7 @@
                     cell.innerText = "";
                     this.removeFill(cell);
                 }
+                this.setInfo(row, "");
             }
         }
 
@@ -15645,6 +15682,13 @@
                 var element = this.getKeyboardLetter(letter);
                 this.removeFill(element);
             }
+        }
+
+        clearResults() {
+            this.hideResults();
+            this.setResultMessage("");
+            var result_score = document.getElementById("result_score");
+            result_score.innerText = "";
         }
 
         getCell(row, column) {
@@ -15660,6 +15704,48 @@
         setInfo(row, message) {
             var infoID = `board_row_${row}_info`;
             document.getElementById(infoID).innerText = message;
+        }
+
+        setResultMessage(message) {
+            var result = document.getElementById("result_message");
+            result.innerText = message;
+        }
+
+        setResultScore() {
+            var result = document.getElementById("result_score");
+            result.innerText = `Score: ${this.game.filteredAnswers.length}`;
+        }
+
+        setResultRemainingPossibilities() {
+            var numPossibilities = this.game.filteredAnswers.length;
+            var message = document.getElementById("result_remaining");
+            var list = document.getElementById("result_remaining_list");
+            if (numPossibilities === 0) {
+                message.innerText = "Perfect! There are no other possibilities for the answer!";
+                list.innerText = "";
+            } else {
+                if (numPossibilities <= 50) {
+                    message.innerText = "Other possibilities:";
+                    list.innerText = this.game.filteredAnswers.join(", ");
+                } else {
+                    message.innerText = "Other possibilities (showing first 50):";
+                    list.innerText = this.game.filteredAnswers.slice(0, 50).join(", ") + ", ...";
+                }
+            }
+        }
+
+        showResults() {
+            var results = document.getElementsByClassName("result");
+            Array.from(results).forEach((result) => {
+                result.style.display = "flex";
+            });
+        }
+
+        hideResults() {
+            var results = document.getElementsByClassName("result");
+            Array.from(results).forEach((result) => {
+                result.style.display = "none";
+            });
         }
 
         removeFill(element) {

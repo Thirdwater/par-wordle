@@ -3,9 +3,10 @@
 <head>
     <meta charset="utf-8" />
     <title>Par-Wordle</title>
-    <meta name="description" content="" />
+    <meta name="description" content="An extension to Wordle showing the number of possible answers remaining." />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    <link rel="shortcut icon" type="image/png" href="resources/favicon.png" />
     <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -13,9 +14,7 @@
         <h1>Par-Wordle</h1>
     </header>
     <main id="wordle">
-        <div id="controls">
-            
-        </div>
+        <div id="controls"></div>
         <div id="board">
             <div id="board_row_1" class="board row">
                 <div id="board_row_1_letter_1" class="board letter"></div>
@@ -66,7 +65,11 @@
                 <div id="board_row_6_info" class="board info"></div>
             </div>
         </div>
-        <div id="result"></div>
+        <div id="result_message" class="result message"></div>
+        <div id="result_score" class="result score"></div>
+        <div id="result_remaining" class="result remaining"></div>
+        <div id="result_remaining_list" class="result remaining"></div>
+        <div id="result_new_game" class="result">Press enter to play again!</div>
         <div id="keyboard">
             <div id="keyboard_row_1" class="keyboard row">
                 <div id="keyboard_letter_q" class="keyboard letter">Q</div>
@@ -106,8 +109,8 @@
         <h2>What is Par-Wordle?</h2>
         <p>
             Par-Wordle is an extension to the Wordle game that displays a score
-            showing how many possible words are left at the end of the round,
-            given all the previous guesses.
+            showing how many possible words are left, given all the previous
+            guesses.
         </p>
         <h2>Why?</h2>
         <p>
@@ -119,15 +122,6 @@
             In a sense, this score is a measure of how lucky we are when we
             reach the answer, and we may want to minimize this number.
         </p>
-        <h2>Transparent Mode</h2>
-        <p>
-            In transparent mode, the number of possible words remaining will be
-            shown next to each guess.
-        </p>
-        <!-- <h2>Free Mode</h2>
-        <p>
-            In free mode, any sequence of 5 letters is a valid guess.
-        </p> -->
     </section>
     <script src="js/wordle.js"></script>
 </body>
